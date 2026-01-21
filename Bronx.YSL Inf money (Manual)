@@ -1,0 +1,153 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+-- Number formatter (adds commas)
+local function formatNumber(n)
+    local formatted = tostring(n)
+    while true do
+        local k
+        formatted, k = formatted:gsub("^(-?%d+)(%d%d%d)", "%1,%2")
+        if k == 0 then break end
+    end
+    return formatted
+end
+
+-- Safe teleport logic
+local function safeTeleport(targetPosition)
+    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local Humanoid = Character and Character:FindFirstChild("Humanoid")
+    local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+
+    if not Humanoid or not RootPart then
+        Library:Notify("Teleport Unsuccessful: Humanoid or RootPart missing", 3)
+        return false
+    end
+
+    Humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
+
+    local timeout = os.clock()
+    while LocalPlayer:GetAttribute("LastACPos") do
+        task.wait(0.05)
+        if os.clock() - timeout > 1.5 then break end
+    end
+
+    RootPart.CFrame = CFrame.new(targetPosition)
+    Humanoid:ChangeState(Enum.HumanoidStateType.Running)
+
+    Library:Notify("[Bronx.YSL] Teleport Successful.", 3)
+    return true
+end
+
+-- Overlay container
+local overlay = Instance.new("ScreenGui")
+overlay.Name = "MoneyOverlay"
+overlay.IgnoreGuiInset = true
+overlay.ResetOnSpawn = false
+overlay.Parent = game:GetService("CoreGui")
+
+local fadeFrame = Instance.new("Frame")
+fadeFrame.Size = UDim2.new(1, 0, 1, 0)
+fadeFrame.Position = UDim2.new(0, 0, 0, 0)
+fadeFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+fadeFrame.BackgroundTransparency = 0
+fadeFrame.BorderSizePixel = 0
+fadeFrame.Parent = overlay
+
+-- Box frame
+local boxFrame = Instance.new("Frame")
+boxFrame.Size = UDim2.new(0.7, 0, 0.35, 0)
+boxFrame.Position = UDim2.new(0.15, 0, 0.33, 0)
+boxFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+boxFrame.BackgroundTransparency = 0.25
+boxFrame.BorderSizePixel = 0
+boxFrame.Parent = overlay
+
+-- LINE 1
+local line1 = Instance.new("TextLabel")
+line1.Size = UDim2.new(1, 0, 0.3, 0)
+line1.Position = UDim2.new(0, 0, 0.02, 0)
+line1.BackgroundTransparency = 1
+line1.TextScaled = true
+line1.Font = Enum.Font.GothamBold
+line1.TextColor3 = Color3.fromRGB(248, 0, 0)
+line1.Text = "Bronx.YSL"
+line1.ZIndex = 1000
+line1.Parent = boxFrame
+
+-- LINE 2
+local line2 = Instance.new("TextLabel")
+line2.Size = UDim2.new(1, 0, 0.3, 0)
+line2.Position = UDim2.new(0, 0, 0.35, 0)
+line2.BackgroundTransparency = 1
+line2.TextScaled = true
+line2.Font = Enum.Font.GothamBold
+line2.TextColor3 = Color3.fromRGB(248, 0, 0)
+line2.Text = "Manual inf money workin.."
+line2.ZIndex = 1000
+line2.Parent = boxFrame
+
+-- LINE 3
+local line3 = Instance.new("TextLabel")
+line3.Size = UDim2.new(1, 0, 0.3, 0)
+line3.Position = UDim2.new(0, 0, 0.68, 0)
+line3.BackgroundTransparency = 1
+line3.TextScaled = true
+line3.Font = Enum.Font.GothamBold
+line3.TextColor3 = Color3.fromRGB(255, 255, 255)
+line3.Text = "discord.gg/JmFq7vYGF7"
+line3.ZIndex = 1000
+line3.Parent = boxFrame
+
+-- LINE 4: Cash display
+local cashText = Instance.new("TextLabel")
+cashText.Size = UDim2.new(1, 0, 0.3, 0)
+cashText.Position = UDim2.new(0, 0, 1.01, 0)
+cashText.BackgroundTransparency = 1
+cashText.TextScaled = true
+cashText.Font = Enum.Font.GothamBold
+cashText.TextColor3 = Color3.fromRGB(255, 255, 255)
+cashText.Text = "$" .. formatNumber(LocalPlayer.stored.FilthyStack.Value)
+cashText.ZIndex = 1000
+cashText.Parent = boxFrame
+
+LocalPlayer.stored.FilthyStack.Changed:Connect(function(newValue)
+    cashText.Text = "$" .. formatNumber(newValue)
+end)
+
+task.delay(3, function()
+    overlay:Destroy()
+end)
+
+
+
+-- Example farming logic with proximity prompt firing
+local originalCF = character:GetPivot()
+safeTeleport(Vector3.new(-68, 287, -321))
+
+for _, v in pairs(workspace:GetDescendants()) do
+    if v:IsA("ProximityPrompt") then
+        v.HoldDuration = 0
+        v.RequiresLineOfSight = false
+    end
+end
+
+local prompt = workspace:FindFirstChild("IceFruit Sell") and workspace["IceFruit Sell"]:FindFirstChildOfClass("ProximityPrompt")
+if prompt then
+    for i = 1, 400 do
+        for j = 1, 50 do
+            fireproximityprompt(prompt, 1, true)
+        end
+        task.wait(0.01)
+    end
+    print("Fired proximity prompt in timed batches.")
+else
+    warn("IceFruit Sell ProximityPrompt not found!")
+end
+
+task.wait(2)
+for _, part in pairs(character:GetDescendants()) do
+    if part:IsA("BasePart") then
+        part.Anchored = false
+    end
+end
